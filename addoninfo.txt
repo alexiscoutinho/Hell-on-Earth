@@ -1,0 +1,19 @@
+AddonInfo
+{
+	addonSteamAppID		550
+	addonTitle			"Hell on Earth"
+	addonVersion		0.1
+	addonAuthor			"João and Jack Bauer ︻デ▬——"
+	addonAuthorSteamID	76561198142401176
+	addonURL0			""
+	addonContent_Script	1
+	addonDescription	"Realism, Hard Twelve, Death's Door and some modifications.
+
+The internal mode name for use in the console is hellonearth.
+
+I want to say right away that this is a new mutation for those who like and are always looking to challenge themselves in the game. It was thought and made in a way to possibly be very difficult but at the same time playable and fun. So much so that it's proposed to be exclusively played on Expert difficulty.
+
+Feel challenged. Record your runs. I really hope you have as much fun as the amount of restarts.
+
+Source: https://github.com/alexiscoutinho/Hell-on-Earth"
+}

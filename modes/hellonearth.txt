@@ -1,0 +1,18 @@
+hellonearth
+{
+	base		realism
+	maxplayers	4
+
+	DisplayTitle		"Hell on Earth"
+	ShortDescription	"Realism, Hard 12, Death's Door and some modifications."
+	Description			"Realism, Hard Twelve, Death's Door and some modifications."
+	Author				"João and Jack Bauer ︻デ▬——"
+	Image				vgui/hellonearth
+
+	convar
+	{
+		director_max_threat_areas 6
+		director_threat_max_separation 2000
+		director_threat_min_separation 1200
+	}
+}
