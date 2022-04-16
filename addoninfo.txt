@@ -2,10 +2,10 @@ AddonInfo
 {
 	addonSteamAppID		550
 	addonTitle			"Hell on Earth"
-	addonVersion		0.1
+	addonVersion		1.0
 	addonAuthor			"João and Jack Bauer ︻デ▬——"
 	addonAuthorSteamID	76561198142401176
-	addonURL0			""
+	addonURL0			https://steamcommunity.com/sharedfiles/filedetails/2795395196
 	addonContent_Script	1
 	addonDescription	"Realism, Hard Twelve, Death's Door and some modifications.
 
