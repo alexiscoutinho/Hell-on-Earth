@@ -64,7 +64,7 @@ function OnGameEvent_round_start( params ) {
 }
 
 function OnGameEvent_player_left_safe_area( params ) {
-	DirectorOptions.TempHealthDecayRate = 0.0667
+	DirectorOptions.TempHealthDecayRate = 0.125
 }
 
 function OnGameEvent_bot_player_replace( params ) {
