@@ -57,16 +57,6 @@ function OnGameEvent_difficulty_changed( params ) {
 		DirectorOptions.cm_BaseCommonAttackDamage = 1.0
 }
 
-function OnGameEvent_round_start( params ) {
-	Convars.SetValue( "pain_pills_decay_rate", 0.0 )
-
-	DecideNextBoss()
-}
-
-function OnGameEvent_player_left_safe_area( params ) {
-	DirectorOptions.TempHealthDecayRate = 0.125
-}
-
 function OnGameEvent_bot_player_replace( params ) {
 	local player = GetPlayerFromUserID( params.player )
 
@@ -121,6 +111,51 @@ if (!Director.IsSessionStartMap()) {
 	}
 }
 
+function GetDecayRate() {
+	return -0.06 * log( self.GetHealthBuffer() ) + 0.4
+}
+
+function TempHealthDecayThink() {
+	if (Director.HasAnySurvivorLeftSafeArea() && self.GetHealthBuffer() > 0 && !self.IsHangingFromLedge()) {
+		local decayRate = GetDecayRate()
+		self.SetHealthBuffer( self.GetHealthBuffer() - decayRate * ThinkInterval )
+	}
+	return ThinkInterval
+}
+
+function OnGameEvent_player_spawn( params ) {
+	local player = GetPlayerFromUserID( params.userid )
+
+	if (NetProps.GetPropInt( player, "m_iTeamNum" ) != 2)
+		return
+
+	player.ValidateScriptScope()
+	local scope = player.GetScriptScope()
+	scope["GetDecayRate"] <- GetDecayRate
+	scope["TempHealthDecayThink"] <- TempHealthDecayThink
+	scope["ThinkInterval"] <- 0.5
+	AddThinkToEnt( player, "TempHealthDecayThink" )
+}
+
+function OnGameEvent_finale_start( params ) {
+	if (g_MapName == "c6m3_port") {
+		for (local player; player = Entities.FindByClassname( player, "player" );) {
+			if (NetProps.GetPropInt( player, "m_iTeamNum" ) == 4) {
+				player.SetHealth( 1 )
+				player.SetHealthBuffer( 99 )
+				player.ValidateScriptScope()
+				local scope = player.GetScriptScope()
+				scope["GetDecayRate"] <- GetDecayRate
+				scope["TempHealthDecayThink"] <- TempHealthDecayThink
+				scope["ThinkInterval"] <- 1
+				AddThinkToEnt( player, "TempHealthDecayThink" )
+			}
+		}
+	}
+}
+
+//TODO: fix https://github.com/Tsuey/L4D2-Community-Update/issues/24 bugs
+
 witchesLeft <- 4
 tanksLeft <- 2
 
@@ -133,6 +168,10 @@ function DecideNextBoss() {
 		Convars.SetValue("director_force_witch", 0)
 		Convars.SetValue("director_force_tank", 1)
 	}
+}
+
+function OnGameEvent_round_start( params ) {
+	DecideNextBoss()
 }
 
 function OnGameEvent_witch_spawn( params ) {

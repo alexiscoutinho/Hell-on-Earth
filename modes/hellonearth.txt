@@ -5,7 +5,7 @@ hellonearth
 
 	DisplayTitle		"Hell on Earth"
 	ShortDescription	"Realism, Hard Twelve, Death's Door and some modifications."
-	Description			"Realism, Hard Twelve, Death's Door, temp health only, slow temp health decay, doubled Tank health, all maps can have up to 4 Witches and 2 Tanks, 50% more damage from Commons in Expert, no first aid kits at all but adrenaline is normal, and the safe room heals a free pills so no reason to suicide."
+	Description			"Realism, Hard Twelve, Death's Door, temp health only, dynamic health decay, doubled Tank health, all maps can have up to 4 Witches and 2 Tanks, 50% more damage from Commons in Expert, no first aid kits at all but adrenaline is normal, and the safe room heals a free pills so no reason to suicide."
 	Author				"João and Jack Bauer ︻デ▬——"
 	Image				vgui/hellonearth
 
