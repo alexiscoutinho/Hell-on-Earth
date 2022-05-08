@@ -1,5 +1,36 @@
 printl("Activating Hell on Earth")
 
+if (!IsModelPrecached("models/infected/smoker.mdl"))
+	PrecacheModel("models/infected/smoker.mdl")
+if (!IsModelPrecached("models/infected/smoker_l4d1.mdl"))
+	PrecacheModel("models/infected/smoker_l4d1.mdl")
+if (!IsModelPrecached("models/infected/boomer.mdl"))
+	PrecacheModel("models/infected/boomer.mdl")
+if (!IsModelPrecached("models/infected/boomer_l4d1.mdl"))
+	PrecacheModel("models/infected/boomer_l4d1.mdl")
+if (!IsModelPrecached("models/infected/boomette.mdl"))
+	PrecacheModel("models/infected/boomette.mdl")
+if (!IsModelPrecached("models/infected/hunter.mdl"))
+	PrecacheModel("models/infected/hunter.mdl")
+if (!IsModelPrecached("models/infected/hunter_l4d1.mdl"))
+	PrecacheModel("models/infected/hunter_l4d1.mdl")
+if (!IsModelPrecached("models/infected/limbs/exploded_boomette.mdl")) {
+	PrecacheModel("models/infected/limbs/exploded_boomette.mdl")
+	::hellonearth_no_female_boomers <- true
+}
+if (!IsModelPrecached("models/infected/spitter.mdl"))
+	PrecacheModel("models/infected/spitter.mdl")
+if (!IsModelPrecached("models/infected/jockey.mdl"))
+	PrecacheModel("models/infected/jockey.mdl")
+if (!IsModelPrecached("models/infected/charger.mdl"))
+	PrecacheModel("models/infected/charger.mdl")
+if (!IsModelPrecached("models/infected/witch.mdl"))
+	PrecacheModel("models/infected/witch.mdl")
+if (!IsModelPrecached("models/infected/hulk.mdl"))
+	PrecacheModel("models/infected/hulk.mdl")
+if (!IsModelPrecached("models/infected/hulk_l4d1.mdl"))
+	PrecacheModel("models/infected/hulk_l4d1.mdl")
+
 MutationOptions <- {
 	ActiveChallenge = 1
 
@@ -21,7 +52,6 @@ MutationOptions <- {
 	function AllowFallenSurvivorItem( classname ) {
 		if (classname == "weapon_first_aid_kit")
 			return false
-		
 		return true
 	}
 
@@ -123,18 +153,13 @@ function TempHealthDecayThink() {
 	return ThinkInterval
 }
 
-function OnGameEvent_player_spawn( params ) {
-	local player = GetPlayerFromUserID( params.userid )
-
-	if (NetProps.GetPropInt( player, "m_iTeamNum" ) != 2)
-		return
-
-	player.ValidateScriptScope()
-	local scope = player.GetScriptScope()
+function OnSurvivorSpawn( survivor ) {
+	survivor.ValidateScriptScope()
+	local scope = survivor.GetScriptScope()
 	scope["GetDecayRate"] <- GetDecayRate
 	scope["TempHealthDecayThink"] <- TempHealthDecayThink
 	scope["ThinkInterval"] <- 0.5
-	AddThinkToEnt( player, "TempHealthDecayThink" )
+	AddThinkToEnt( survivor, "TempHealthDecayThink" )
 }
 
 function OnGameEvent_finale_start( params ) {
@@ -154,13 +179,39 @@ function OnGameEvent_finale_start( params ) {
 	}
 }
 
-//TODO: fix https://github.com/Tsuey/L4D2-Community-Update/issues/24 bugs
+//TODO: fix https://github.com/Tsuey/L4D2-Community-Update/issues/24 bugs?
 
-witchesLeft <- 4
-tanksLeft <- 2
+MutationState <- {
+	WitchesLeft = 4
+	TanksLeft = 2
+	SIModelsBase = [
+		["models/infected/smoker.mdl", "models/infected/smoker_l4d1.mdl"],
+		["models/infected/boomer.mdl", "models/infected/boomer_l4d1.mdl", "models/infected/boomette.mdl"],
+		["models/infected/hunter.mdl", "models/infected/hunter_l4d1.mdl"],
+		["models/infected/spitter.mdl"],
+		["models/infected/jockey.mdl"],
+		["models/infected/charger.mdl"],
+		["models/infected/witch.mdl"],
+		["models/infected/hulk.mdl", "models/infected/hulk_l4d1.mdl"],
+	]
+	SIModels = [
+		["models/infected/smoker.mdl", "models/infected/smoker_l4d1.mdl"],
+		["models/infected/boomer.mdl", "models/infected/boomer_l4d1.mdl", "models/infected/boomette.mdl"],
+		["models/infected/hunter.mdl", "models/infected/hunter_l4d1.mdl"],
+		["models/infected/spitter.mdl"],
+		["models/infected/jockey.mdl"],
+		["models/infected/charger.mdl"],
+		["models/infected/witch.mdl"],
+		["models/infected/hulk.mdl", "models/infected/hulk_l4d1.mdl"],
+	]
+	ModelCheck = [false, false, false, false, false, false, false, false]
+	LastBoomerModel = ""
+	BoomersChecked = 0
+	TankChance = 35
+}
 
 function DecideNextBoss() {
-	if (witchesLeft > 0 && RandomInt( 1, 100 ) > 35 || tanksLeft == 0) {
+	if (SessionState.WitchesLeft > 0 && RandomInt( 1, 100 ) > SessionState.TankChance || SessionState.TanksLeft <= 0) {
 		Convars.SetValue("director_force_tank", 0)
 		Convars.SetValue("director_force_witch", 1)
 	}
@@ -180,8 +231,16 @@ function OnGameEvent_witch_spawn( params ) {
 
 	if (Entities.FindByClassnameWithin(null, "info_zombie_spawn", witchPos, 3) != null)
 		return
+	//TODO: filter out console spawned witches
 
-	witchesLeft--
+	if (g_MapName == "c6m1_riverbank" && witch.GetModelName() == "models/infected/witch_bride.mdl") {
+		local sequence = witch.GetSequence()
+		witch.SetModel("models/infected/witch.mdl")
+		witch.SetSequence( sequence )
+		//TODO: fix witch sound
+	}
+
+	SessionState.WitchesLeft--
 	DecideNextBoss()
 }
 
@@ -192,8 +251,64 @@ function OnGameEvent_tank_spawn( params ) {
 	if (Entities.FindByClassnameWithin(null, "info_zombie_spawn", tankPos, 3) != null)
 		return
 
-	tanksLeft--
+	SessionState.TanksLeft--	//TODO: filter out console spawned tanks
 	DecideNextBoss()
+}
+
+function OnSpecialSpawn( special ) {
+	local zombieType = special.GetZombieType()
+	local modelName = special.GetModelName()
+
+	if (!SessionState.ModelCheck[ zombieType - 1 ]) {
+		if (zombieType == 2 && !("hellonearth_no_female_boomers" in getroottable())) {
+			if (SessionState.LastBoomerModel != modelName) {
+				SessionState.LastBoomerModel = modelName
+				SessionState.BoomersChecked++
+			}
+			if (SessionState.BoomersChecked > 1)
+				SessionState.ModelCheck[ zombieType - 1 ] = true
+		}
+		else
+			SessionState.ModelCheck[ zombieType - 1 ] = true
+
+		if (modelName == "models/infected/hulk_dlc3.mdl") {
+			if (SessionState.SIModelsBase[ 7 ].find("models/infected/hulk.mdl") == null) {
+				SessionState.SIModelsBase[ 7 ].append("models/infected/hulk.mdl")
+				SessionState.SIModels[ 7 ].append("models/infected/hulk.mdl")
+			}
+		}
+		else {
+			if (SessionState.SIModelsBase[ zombieType - 1 ].find( modelName ) == null) {
+				SessionState.SIModelsBase[ zombieType - 1 ].append( modelName )
+				SessionState.SIModels[ zombieType - 1 ].append( modelName )
+			}
+		}
+	}
+
+	if (SessionState.SIModelsBase[ zombieType - 1 ].len() == 1)
+		return
+
+	local zombieModels = SessionState.SIModels[ zombieType - 1 ]
+	if (zombieModels.len() == 0)
+		SessionState.SIModels[ zombieType - 1 ].extend( SessionState.SIModelsBase[ zombieType - 1 ] )
+
+	local randomElement = RandomInt( 0, zombieModels.len() - 1 )
+	local randomModel = zombieModels[ randomElement ]
+	zombieModels.remove( randomElement )
+
+	local sequence = special.GetSequence()
+	special.SetModel( randomModel )
+	special.SetSequence( sequence )
+}
+
+function OnGameEvent_player_spawn( params ) {
+	local player = GetPlayerFromUserID( params.userid )
+	local teamNum = NetProps.GetPropInt( player, "m_iTeamNum" )
+
+	if (teamNum == 2)
+		OnSurvivorSpawn( player )
+	else if (teamNum == 3)
+		OnSpecialSpawn( player )
 }
 
 function Update() {
