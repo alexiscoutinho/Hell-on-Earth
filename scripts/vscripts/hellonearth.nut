@@ -100,6 +100,15 @@ function OnGameEvent_pills_used( params ) {
 	StopSoundOn( "Player.Heartbeat", player )
 }
 
+function OnGameEvent_player_complete_sacrifice( params ) {
+	local player = GetPlayerFromUserID( params.userid )
+	if (!player)
+		return
+
+	NetProps.SetPropInt( player, "m_takedamage", 0 )
+	NetProps.SetPropInt( player, "m_isIncapacitated", 1 )
+}
+
 if (!Director.IsSessionStartMap()) {
 	function PlayerSpawnDeadAfterTransition( userid ) {
 		local player = GetPlayerFromUserID( userid )
@@ -130,7 +139,6 @@ if (!Director.IsSessionStartMap()) {
 
 	function OnGameEvent_player_transitioned( params ) {
 		local player = GetPlayerFromUserID( params.userid )
-
 		if (!player || !player.IsSurvivor())
 			return
 
