@@ -50,9 +50,31 @@ MutationOptions <- {
 	ZombieTankHealth = 8000
 
 	function AllowFallenSurvivorItem( classname ) {
-		if (classname == "weapon_first_aid_kit")
-			return false
-		return true
+		if (classname != "weapon_first_aid_kit")
+			return true
+
+		if (RandomInt( 1, 100 ) > 25) {
+			local fallen
+
+			while (fallen = Entities.FindByClassname( fallen, "infected" )) {
+				if (NetProps.GetPropInt( fallen, "m_Gender" ) == GENDER_FALLEN)
+					break
+			}
+
+			local defib = SpawnEntityFromTable( "prop_dynamic", {
+				model = "models/w_models/weapons/w_eq_defibrillator.mdl"
+				solid = 4
+			} )
+
+			DoEntFire( "!caller", "SetParent", "!activator", 0.0, fallen, defib )
+			DoEntFire( "!self", "SetParentAttachment", "medkit", 0.0, null, defib )
+			local code = "self.SetLocalAngles( QAngle( -90, 0, 0 ) ); self.SetLocalOrigin( Vector( 1.5, 1, 4 ) )"
+			DoEntFire( "!self", "RunScriptCode", code, 0.0, null, defib )
+
+			fallen.ValidateScriptScope()
+			fallen.GetScriptScope().defib <- defib
+		}
+		return false
 	}
 
 	weaponsToConvert = {
@@ -85,6 +107,28 @@ function OnGameEvent_difficulty_changed( params ) {
 		DirectorOptions.cm_BaseCommonAttackDamage <- 1.5
 	else if ("cm_BaseCommonAttackDamage" in DirectorOptions)
 		DirectorOptions.cm_BaseCommonAttackDamage = 1.0
+}
+
+const GENDER_FALLEN = 14
+
+function OnGameEvent_zombie_death( params ) {
+	if (params.gender != GENDER_FALLEN)
+		return
+
+	local fallen = EntIndexToHScript( params.victim )
+	local scope = fallen.GetScriptScope()
+
+	if (scope && ("defib" in scope) && scope.defib.IsValid()) {
+		scope.defib.Kill()
+
+		local w_defib = SpawnEntityFromTable( "weapon_defibrillator", {
+			angles = scope.defib.GetAngles().ToKVString()
+			origin = scope.defib.GetOrigin()
+		} )
+
+		w_defib.ApplyAbsVelocityImpulse( GetPhysVelocity( scope.defib ) )
+		w_defib.ApplyLocalAngularVelocityImpulse( GetPhysAngularVelocity( scope.defib ) )
+	}
 }
 
 function OnGameEvent_bot_player_replace( params ) {
