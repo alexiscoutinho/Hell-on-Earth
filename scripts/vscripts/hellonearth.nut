@@ -214,6 +214,13 @@ function OnSurvivorSpawn( survivor ) {
 	AddThinkToEnt( survivor, "TempHealthDecayThink" )
 }
 
+function OnGameEvent_player_death( params ) {
+	local player = GetPlayerFromUserID( params.userid )
+
+	if (NetProps.GetPropInt( player, "m_iTeamNum" ) == 2)
+		AddThinkToEnt( player, null )
+}
+
 function OnGameEvent_finale_start( params ) {
 	if (g_MapName == "c6m3_port") {
 		for (local player; player = Entities.FindByClassname( player, "player" );) {
