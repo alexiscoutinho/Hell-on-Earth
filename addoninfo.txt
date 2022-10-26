@@ -2,7 +2,7 @@ AddonInfo
 {
 	addonSteamAppID		550
 	addonTitle			"Hell on Earth"
-	addonVersion		3.4
+	addonVersion		3.5
 	addonAuthor			"João and Jack Bauer ︻デ▬——"
 	addonAuthorSteamID	76561198142401176
 	addonURL0			https://steamcommunity.com/sharedfiles/filedetails/2795395196

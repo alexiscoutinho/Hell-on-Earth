@@ -131,6 +131,12 @@ function OnGameEvent_zombie_death( params ) {
 	}
 }
 
+function OnGameEvent_player_bot_replace( params ) {
+	local player = GetPlayerFromUserID( params.player )
+
+	AddThinkToEnt( player, null )
+}
+
 function OnGameEvent_bot_player_replace( params ) {
 	local player = GetPlayerFromUserID( params.player )
 
@@ -140,8 +146,8 @@ function OnGameEvent_bot_player_replace( params ) {
 function OnGameEvent_pills_used( params ) {
 	local player = GetPlayerFromUserID( params.userid )
 
-	NetProps.SetPropInt( player, "m_bIsOnThirdStrike", 0 )
 	StopSoundOn( "Player.Heartbeat", player )
+	NetProps.SetPropInt( player, "m_bIsOnThirdStrike", 0 )
 }
 
 function OnGameEvent_player_complete_sacrifice( params ) {
@@ -187,9 +193,9 @@ if (!Director.IsSessionStartMap()) {
 			return
 
 		if (NetProps.GetPropInt( player, "m_lifeState" ) == 2)
-			EntFire( "worldspawn", "RunScriptCode", "g_ModeScript.PlayerSpawnDeadAfterTransition(" + params.userid + ")", 0.1 )
+			EntFire( "worldspawn", "RunScriptCode", "g_ModeScript.PlayerSpawnDeadAfterTransition(" + params.userid + ")", 0.0 )
 		else
-			EntFire( "worldspawn", "RunScriptCode", "g_ModeScript.PlayerSpawnAliveAfterTransition(" + params.userid + ")", 0.1 )
+			EntFire( "worldspawn", "RunScriptCode", "g_ModeScript.PlayerSpawnAliveAfterTransition(" + params.userid + ")", 0.0 )
 	}
 }
 
@@ -206,19 +212,25 @@ function TempHealthDecayThink() {
 }
 
 function OnSurvivorSpawn( survivor ) {
-	survivor.ValidateScriptScope()
-	local scope = survivor.GetScriptScope()
-	scope["GetDecayRate"] <- GetDecayRate
-	scope["TempHealthDecayThink"] <- TempHealthDecayThink
-	scope["ThinkInterval"] <- 0.5
+	if (!survivor.GetScriptScope()) {
+		survivor.ValidateScriptScope()
+		local scope = survivor.GetScriptScope()
+		scope.GetDecayRate <- GetDecayRate
+		scope.TempHealthDecayThink <- TempHealthDecayThink
+		scope.ThinkInterval <- 0.5
+	}
 	AddThinkToEnt( survivor, "TempHealthDecayThink" )
 }
 
 function OnGameEvent_player_death( params ) {
-	local player = GetPlayerFromUserID( params.userid )
+	if (!("userid" in params))
+		return
 
-	if (NetProps.GetPropInt( player, "m_iTeamNum" ) == 2)
-		AddThinkToEnt( player, null )
+	local player = GetPlayerFromUserID( params.userid )
+	if (!player.IsSurvivor())
+		return
+
+	AddThinkToEnt( player, null )
 }
 
 function OnGameEvent_finale_start( params ) {
@@ -229,9 +241,9 @@ function OnGameEvent_finale_start( params ) {
 				player.SetHealthBuffer( 99 )
 				player.ValidateScriptScope()
 				local scope = player.GetScriptScope()
-				scope["GetDecayRate"] <- GetDecayRate
-				scope["TempHealthDecayThink"] <- TempHealthDecayThink
-				scope["ThinkInterval"] <- 1
+				scope.GetDecayRate <- GetDecayRate
+				scope.TempHealthDecayThink <- TempHealthDecayThink
+				scope.ThinkInterval <- 1
 				AddThinkToEnt( player, "TempHealthDecayThink" )
 			}
 		}
